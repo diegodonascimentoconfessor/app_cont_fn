@@ -1,0 +1,10 @@
+node_modules
+serviceAccountKey.json
+*serviceAccountKey*.json
+.env
+.env.*
+!.env.example
+gastos.db
+*.log
+*firebase-adminsdk*.json
+producao-variaveis.txt

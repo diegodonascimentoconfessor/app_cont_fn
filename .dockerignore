@@ -1,0 +1,8 @@
+node_modules
+serviceAccountKey.json
+*serviceAccountKey*.json
+.env
+.env.*
+!.env.example
+gastos.db
+*.log

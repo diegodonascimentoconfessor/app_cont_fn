@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Dashboard de Gastos</title>
+<script src="/vendor/chart.umd.js"></script>
+<style>
+  :root { --bg:#f4f6fb; --card:#fff; --txt:#1f2937; --mut:#6b7280; --pri:#4f46e5; --bor:#e5e7eb; --red:#dc2626; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); color:var(--txt); }
+  header { padding:20px 24px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
+  h1 { margin:0; font-size:1.4rem; }
+  main { max-width:1100px; margin:0 auto; padding:0 16px 40px; display:grid; gap:16px; grid-template-columns:1fr 1fr; }
+  .card { background:var(--card); border:1px solid var(--bor); border-radius:12px; padding:18px; }
+  .full { grid-column:1/-1; }
+  .total { font-size:2rem; font-weight:700; color:var(--pri); }
+  label { font-size:.8rem; color:var(--mut); display:block; margin-bottom:4px; }
+  input { width:100%; padding:9px; border:1px solid var(--bor); border-radius:8px; font-size:.95rem; }
+  form { display:grid; gap:10px; grid-template-columns:2fr 1fr 1fr 1fr auto; align-items:end; }
+  button { padding:9px 14px; border:0; border-radius:8px; background:var(--pri); color:#fff; cursor:pointer; font-size:.9rem; }
+  button.sec { background:#e5e7eb; color:var(--txt); }
+  button.del { background:transparent; color:var(--red); padding:4px 8px; }
+  button.edit { background:transparent; color:var(--pri); padding:4px 8px; }
+  table { width:100%; border-collapse:collapse; font-size:.92rem; }
+  th,td { text-align:left; padding:9px 6px; border-bottom:1px solid var(--bor); }
+  th { color:var(--mut); font-weight:600; font-size:.8rem; }
+  td.v { text-align:right; white-space:nowrap; }
+  .cat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--bor); }
+  .vazio { color:var(--mut); text-align:center; padding:16px; }
+  .chart-box { height:260px; position:relative; }
+  input { min-height:42px; }
+  button { min-height:42px; }
+  .head-actions { display:flex; gap:8px; align-items:end; flex-wrap:wrap; }
+  .table-wrap { overflow-x:auto; }
+  .acoes { display:flex; gap:4px; justify-content:flex-end; }
+  .form-btns { display:flex; gap:6px; }
+
+  @media (max-width:900px){
+    main { grid-template-columns:1fr; }
+    form { grid-template-columns:1fr 1fr; }
+    form > div:first-of-type { grid-column:1/-1; }
+    .form-btns { grid-column:1/-1; }
+    .form-btns button { flex:1; }
+  }
+  @media (max-width:600px){
+    header { padding:14px 12px; }
+    h1 { font-size:1.15rem; }
+    main { padding:0 12px 28px; gap:12px; }
+    .card { padding:14px; }
+    .head-actions, .head-actions > div { width:100%; }
+    .head-actions > div { flex:1; }
+    .head-actions button { flex:1; }
+    input { font-size:16px; } /* evita zoom automatico no iOS */
+    .total { font-size:1.7rem; }
+    .chart-box { height:220px; }
+    /* tabela vira lista de cartoes */
+    table, tbody, tr, td { display:block; width:100%; }
+    thead { display:none; }
+    tr { border:1px solid var(--bor); border-radius:10px; padding:8px 10px; margin-bottom:10px; }
+    td { border:0; padding:3px 0; display:flex; justify-content:space-between; gap:12px; text-align:right !important; }
+    td::before { content:attr(data-label); color:var(--mut); font-size:.78rem; text-align:left; }
+    td.v { font-weight:600; }
+    td.acoes-td::before { content:''; }
+    .acoes { width:100%; justify-content:space-between; margin-top:4px; }
+    .acoes button { flex:1; background:#f3f4f6; }
+  }
+
+  /* ===== EFEITOS ===== */
+  body { background:linear-gradient(135deg,#eef2ff 0%,#f4f6fb 45%,#fdf2f8 100%); background-attachment:fixed; }
+  h1 { background:linear-gradient(90deg,#4f46e5,#ec4899); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .card { transition:transform .25s ease, box-shadow .25s ease; animation:fadeUp .55s ease both; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  main > .card:nth-child(2) { animation-delay:.08s; }
+  main > .card:nth-child(3) { animation-delay:.16s; }
+  main > .card:nth-child(4) { animation-delay:.24s; }
+  .card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(79,70,229,.12); }
+  input { transition:border-color .2s, box-shadow .2s; }
+  input:focus { outline:none; border-color:var(--pri); box-shadow:0 0 0 3px rgba(79,70,229,.18); }
+  button { transition:transform .15s ease, box-shadow .2s ease, filter .2s, background .2s; position:relative; overflow:hidden; }
+  button:hover { transform:translateY(-1px); filter:brightness(1.08); box-shadow:0 4px 12px rgba(79,70,229,.25); }
+  button:active { transform:scale(.95); }
+  button.del:hover { background:#fee2e2; box-shadow:none; }
+  button.edit:hover { background:#e0e7ff; box-shadow:none; }
+  .ripple { position:absolute; border-radius:50%; background:rgba(255,255,255,.55); transform:scale(0); animation:ripple .6s linear; pointer-events:none; }
+  tbody tr { transition:background .2s; animation:rowIn .4s ease both; }
+  tbody tr:hover { background:#f5f3ff; }
+  tbody tr.saindo { animation:rowOut .3s ease forwards; }
+  .total { transition:color .3s; }
+  .total.pulse { animation:pulse .5s ease; }
+  .cat { display:block; }
+  .cat-top { display:flex; justify-content:space-between; }
+  .bar { height:6px; border-radius:99px; background:#eef2ff; margin-top:5px; overflow:hidden; }
+  .bar > i { display:block; height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,#4f46e5,#ec4899); transition:width .9s cubic-bezier(.2,.8,.2,1); }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,40px); background:#111827; color:#fff; padding:10px 18px; border-radius:99px; font-size:.9rem; opacity:0; pointer-events:none; transition:all .35s ease; z-index:50; }
+  #toast.show { opacity:1; transform:translate(-50%,0); }
+  @keyframes fadeUp { from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:none;} }
+  @keyframes rowIn { from{opacity:0; transform:translateX(-12px);} to{opacity:1; transform:none;} }
+  @keyframes rowOut { to{opacity:0; transform:translateX(30px);} }
+  @keyframes pulse { 50%{transform:scale(1.06);} }
+  @keyframes ripple { to{transform:scale(4); opacity:0;} }
+  @media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>💸 Dashboard de Gastos</h1>
+  <div class="head-actions">
+    <div><label for="mes">Mês</label><input type="month" id="mes"></div>
+    <button class="sec" id="todos">Todos</button>
+    <button id="csv">Exportar CSV</button>
+    <button class="sec" id="sair">Sair</button>
+  </div>
+</header>
+<main>
+  <section class="card full">
+    <form id="form">
+      <input type="hidden" id="id">
+      <div><label>Descrição</label><input id="descricao" required placeholder="Ex.: Mercado"></div>
+      <div><label>Categoria</label><input id="categoria" required list="cats" placeholder="Alimentação"><datalist id="cats"></datalist></div>
+      <div><label>Valor (R$)</label><input id="valor" type="number" step="0.01" min="0.01" required></div>
+      <div><label>Data</label><input id="data" type="date" required></div>
+      <div class="form-btns"><button type="submit" id="salvar">Adicionar</button><button type="button" class="sec" id="cancelar" hidden>Cancelar</button></div>
+    </form>
+  </section>
+
+  <section class="card">
+    <div style="color:var(--mut);font-size:.85rem">Total no período</div>
+    <div class="total" id="total">R$ 0,00</div>
+    <div id="categorias" style="margin-top:12px"></div>
+  </section>
+
+  <section class="card"><div class="chart-box"><canvas id="grafico"></canvas></div></section>
+
+  <section class="card full">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+      <tbody id="lista"></tbody>
+    </table></div>
+    <div class="vazio" id="vazio" hidden>Nenhum gasto neste período.</div>
+  </section>
+</main>
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
