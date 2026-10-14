@@ -30,13 +30,40 @@
   .cat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--bor); }
   .vazio { color:var(--mut); text-align:center; padding:16px; }
   .chart-box { height:260px; position:relative; }
-  @media (max-width:800px){ main{grid-template-columns:1fr;} form{grid-template-columns:1fr 1fr;} }
+  html { -webkit-text-size-adjust:100%; }
+  main > * { min-width:0; }
+  select, input, button { font-family:inherit; }
+  .acoes { display:flex; gap:8px; align-items:end; flex-wrap:wrap; }
+  @media (max-width:800px){ main{grid-template-columns:1fr;} form{grid-template-columns:1fr 1fr;} #descricao-box{grid-column:1/-1;} }
+  @media (max-width:600px){
+    header { padding:14px 12px; }
+    h1 { font-size:1.2rem; }
+    main { padding:0 12px 28px; gap:12px; }
+    .card { padding:14px; }
+    .acoes { width:100%; }
+    .acoes > div { flex:1 1 140px; }
+    .acoes select { width:100%; }
+    input, select, button { font-size:16px; min-height:42px; } /* evita zoom no iOS e melhora o toque */
+    form { grid-template-columns:1fr; }
+    form > div:last-child { width:100%; }
+    form > div:last-child button { flex:1; }
+    .total { font-size:1.7rem; }
+    .chart-box { height:230px; }
+    table, thead, tbody, tr, td { display:block; width:100%; }
+    thead { display:none; }
+    tr { border:1px solid var(--bor); border-radius:10px; padding:8px 10px; margin-bottom:10px; }
+    td { border:0; padding:3px 0; text-align:left !important; display:flex; justify-content:space-between; gap:10px; }
+    td::before { content:attr(data-label); color:var(--mut); font-size:.8rem; }
+    td.v:last-child { justify-content:flex-end; gap:6px; padding-top:6px; }
+    td.v:last-child::before { content:none; }
+    td.v:last-child button { border:1px solid var(--bor); padding:8px 14px; }
+  }
 </style>
 </head>
 <body>
 <header>
   <h1>💸 Dashboard de Gastos</h1>
-  <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+  <div class="acoes">
     <div><label for="cliente">Cliente</label><select id="cliente"></select></div>
     <button class="sec" id="novoCliente" title="Novo cliente">+ Novo</button>
     <button class="sec" id="renomear" title="Renomear cliente">✏️</button>
@@ -50,7 +77,7 @@
   <section class="card full">
     <form id="form">
       <input type="hidden" id="id">
-      <div><label>Descrição</label><input id="descricao" required placeholder="Ex.: Mercado"></div>
+      <div id="descricao-box"><label>Descrição</label><input id="descricao" required placeholder="Ex.: Mercado"></div>
       <div><label>Categoria</label><input id="categoria" required list="cats" placeholder="Alimentação"><datalist id="cats"></datalist></div>
       <div><label>Valor (R$)</label><input id="valor" type="number" step="0.01" min="0.01" required></div>
       <div><label>Data</label><input id="data" type="date" required></div>

@@ -87,10 +87,10 @@ function carregar() {
 
   $('lista').innerHTML = gastos.map(g => `
     <tr>
-      <td>${g.data.split('-').reverse().join('/')}</td>
-      <td>${esc(g.descricao)}</td>
-      <td>${esc(g.categoria)}</td>
-      <td class="v">${brl(g.valor)}</td>
+      <td data-label="Data">${g.data.split('-').reverse().join('/')}</td>
+      <td data-label="Descrição">${esc(g.descricao)}</td>
+      <td data-label="Categoria">${esc(g.categoria)}</td>
+      <td class="v" data-label="Valor">${brl(g.valor)}</td>
       <td class="v">
         <button class="edit" data-edit="${esc(g.id)}">Editar</button>
         <button class="del" data-del="${esc(g.id)}">Excluir</button>
@@ -113,7 +113,7 @@ function desenharGrafico(dados) {
       datasets: [{ data: dados.map(d => d.total),
         backgroundColor: ['#4f46e5','#06b6d4','#f59e0b','#ef4444','#10b981','#8b5cf6','#ec4899','#64748b'] }]
     },
-    options: { maintainAspectRatio: false, plugins: { legend: { position: 'right' },
+    options: { maintainAspectRatio: false, plugins: { legend: { position: window.innerWidth < 600 ? 'bottom' : 'right' },
       tooltip: { callbacks: { label: c => ` ${c.label}: ${brl(c.parsed)}` } } } }
   });
 }
